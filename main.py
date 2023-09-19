@@ -322,7 +322,7 @@ def encode_bytes_to_string(bytes_):
 
 """
 
-#TODO
+
 def graph_update(i, line, line2, line3, line4, line5, line6, line7, line8, line9):
     # global count_graph
     # print(f' - {i} vs. graph update count: {count_graph}')
@@ -356,7 +356,7 @@ def graph_update(i, line, line2, line3, line4, line5, line6, line7, line8, line9
     y8_array.append(sensor_8)
     y9_array.append(sensor_9)
 
-    x_array.append(i)     #todo count_graph and do some math to eventually reduce some 0s at the beginning...
+    x_array.append(i)
     line.set_data(x_array, y1_array)
     line2.set_data(x_array, y2_array)
     line3.set_data(x_array, y3_array)
@@ -454,6 +454,50 @@ def create_graph():
 
 """
 
+# new simpler store data function -> does not create subfolder
+def store_data_windows(address, serial):
+    folder_path = os.getcwd()
+
+    print(f'path exists: {folder_path}')
+
+    file_name = f'{address}_{serial}.xlsx'
+    # check if file with data exists: mac_serial_xx
+    excel_file = f'{folder_path}/{file_name}'
+    file_exists = os.path.isfile(excel_file)
+
+
+    # create file
+    if not file_exists:
+        print('file does not exist')
+        wb = Workbook()
+        # wb.create_sheet("version_1", 0)
+        wb.save(f'{folder_path}/{file_name}')
+
+
+    # LOAD FILE
+    wb = openpyxl.load_workbook(f'{folder_path}/{file_name}')
+    all_sheets = wb.sheetnames
+    print(all_sheets)
+    number = len(all_sheets)
+    print(number)
+
+    sheet = wb.create_sheet(f'version_{number}', 0)
+    print(sheet)
+
+    # store data: sensors1 ...sensor9 + timestamp
+    amount = len(y1_array)
+    i = 0
+
+    for i in range(amount):
+        data = (y1_array[i], y2_array[i], y3_array[i], y4_array[i], y5_array[i], y6_array[i], y7_array[i], y8_array[i], y9_array[i], timestamp[i])
+        sheet.append(data)
+
+    # close
+    wb.save(f'{folder_path}/{file_name}')
+
+
+
+
 def store_data(address, serial):
     current_path = os.getcwd()
     folder_path = f'{current_path}/sensor_data'
@@ -524,7 +568,7 @@ def command_start_reading():
 
     # enable
     stop_reading_button.state(["!disabled"])
-    disconnect_button.state(["!disabled"])
+    # disconnect_button.state(["!disabled"])
 
     graph_thread()
     the_read_handler_queue.put(0)
@@ -542,8 +586,8 @@ def command_stop_reading():
 
 
     # enable
-    disconnect_button.state(["!disabled"])
-    delete_current_button.state(["!disabled"])
+    # disconnect_button.state(["!disabled"])
+    # delete_current_button.state(["!disabled"])
     store_data_button.state(["!disabled"])
 
     the_read_handler_queue.put(2)
@@ -556,7 +600,7 @@ def command_delete_current():
     print('prepares for rereading')
 
     # disable
-    delete_current_button.state(["disabled"])
+    # delete_current_button.state(["disabled"])
     store_data_button.state(["disabled"])
 
     # enable
@@ -571,7 +615,7 @@ def command_disconnect():
     print('disconnecting from BLE device')
 
     # disable
-    disconnect_button.state(["disabled"])
+    # disconnect_button.state(["disabled"])
 
 
     # enable
@@ -589,11 +633,11 @@ def command_store_data():
     # disable
     store_data_button.state(["disabled"])
 
-    store_data(mac_address_connected, serial_connected)
+    store_data_windows(mac_address_connected, serial_connected)
 
     # enable
-    delete_current_button.state(["!disabled"])
-    disconnect_button.state(["!disabled"])
+    # delete_current_button.state(["!disabled"])
+    # disconnect_button.state(["!disabled"])
 
 
 
@@ -647,9 +691,9 @@ stop_reading_button.state(["disabled"])
 inside2_left = ttk.Frame(left_container)
 inside2_left.pack(side='top', pady=10)
 
-delete_current_button = ttk.Button(inside2_left, text="RE-READ", command=command_delete_current)
-delete_current_button.pack(side='left', padx=20)
-delete_current_button.state(["disabled"])
+# delete_current_button = ttk.Button(inside2_left, text="RE-READ", command=command_delete_current)
+# delete_current_button.pack(side='left', padx=20)
+# delete_current_button.state(["disabled"])
 
 store_data_button = ttk.Button(inside2_left, text="STORE DATA", command=command_store_data)
 store_data_button.pack(side='right', padx=20)
@@ -657,9 +701,9 @@ store_data_button.state(["disabled"])
 
 # DISCONNECT + Status Bar
 
-disconnect_button = ttk.Button(left_container, text="DISCONNECT", command=command_disconnect)
-disconnect_button.pack(pady=10)
-disconnect_button.state(["disabled"])
+# disconnect_button = ttk.Button(left_container, text="DISCONNECT", command=command_disconnect)
+# disconnect_button.pack(pady=10)
+# disconnect_button.state(["disabled"])
 
 status_bar_label = ttk.Label(left_container, font=('Helvetica', 24), wraplength=300)
 status_bar_label.pack(side='bottom', pady=10, anchor='s')
